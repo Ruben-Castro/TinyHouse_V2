@@ -31,7 +31,7 @@ export interface Listing {
   bookings: ObjectId[];
   bookingsIndex: BookingsIndex;
   price: number;
-  numOfGuest: number;
+  numOfGuests: number;
 }
 
 export interface Booking {
