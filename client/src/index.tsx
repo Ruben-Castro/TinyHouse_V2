@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState}  from "react";
 import { render } from "react-dom";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import * as serviceWorker from "./serviceWorker";
@@ -14,14 +14,24 @@ import {
 import ApolloClient from "apollo-boost";
 import { ApolloProvider } from "react-apollo";
 import { Layout } from "antd";
-
+import { Viewer } from "./lib/types";
 import "./styles/index.css";
 
 const client = new ApolloClient({
   uri: "/api",
 });
 
+const initialViewer: Viewer = {
+  id: null,
+  token: null,
+  avatar: null,
+  hasWallet: null,
+  didRequest: false,
+};
+
 const App = () => {
+  const [viewer, setViewer] = useState<Viewer>(initialViewer);
+  console.log(viewer);
   return (
     <Router>
       <Layout id="app">
@@ -31,7 +41,11 @@ const App = () => {
           <Route exact path="/listing/:id" component={Listing} />
           <Route exact path="/listings/:location?" component={Listings} />
           <Route exact path="/user/:id" component={User} />
-          <Route exact path="/Login" component={Login} />
+          <Route
+            exact
+            path="/Login"
+            render={(props) => <Login {...props} setViewer={setViewer} />}
+          />
           <Route exact component={NotFound} />
         </Switch>
       </Layout>
