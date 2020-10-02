@@ -23,6 +23,7 @@ export const MenuItems = ({ viewer, setViewer }: Props) => {
     onCompleted: (data) => {
       if (data && data.logOut) {
         setViewer(data.logOut);
+        sessionStorage.removeItem("token");
         displaySuccessNotification("You've successfully logged out!");
       }
     },
@@ -56,7 +57,7 @@ export const MenuItems = ({ viewer, setViewer }: Props) => {
     ) : (
       <Item>
         <Link to="/login">
-        <Button type="primary">Sign In</Button>
+          <Button type="primary">Sign In</Button>
         </Link>
       </Item>
     );
