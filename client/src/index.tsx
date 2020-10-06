@@ -28,7 +28,7 @@ const client = new ApolloClient({
   uri: "/api",
   request: async (operation) => {
     const token = sessionStorage.getItem("token");
-    console.log(token)
+    console.log(token);
     operation.setContext({
       headers: {
         "X-CSRF-TOKEN": token || "",
@@ -94,7 +94,11 @@ const App = () => {
           <Route exact path="/host" component={Host} />
           <Route exact path="/listing/:id" component={Listing} />
           <Route exact path="/listings/:location?" component={Listings} />
-          <Route exact path="/user/:id" component={User} />
+          <Route
+            exact
+            path="/user/:id"
+            render={(props) => <User {...props} viewer={viewer} />}
+          />
           <Route
             exact
             path="/Login"
