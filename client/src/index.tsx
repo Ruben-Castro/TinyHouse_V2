@@ -28,7 +28,7 @@ const client = new ApolloClient({
   uri: "/api",
   request: async (operation) => {
     const token = sessionStorage.getItem("token");
-    console.log(token);
+    console.log(`token: ${token}`);
     operation.setContext({
       headers: {
         "X-CSRF-TOKEN": token || "",
