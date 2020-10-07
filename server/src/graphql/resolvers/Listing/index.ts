@@ -6,6 +6,9 @@ import {
   ListingArgs,
   ListingBookingsData,
   ListingBookingsArgs,
+  ListingsArgs,
+  ListingsData,
+  ListingsFilter,
 } from "./types";
 import { Request } from "express";
 
@@ -31,6 +34,37 @@ export const listingResolvers: IResolvers = {
         return listing;
       } catch (err) {
         throw new Error(`Failed to query a listing: ${err}`);
+      }
+    },
+    listings: async (
+      _root: undefined,
+      { filter, limit, page }: ListingsArgs,
+      { db }: { db: Database }
+    ): Promise<ListingsData> => {
+      try {
+        const data: ListingsData = {
+          total: 0,
+          result: [],
+        };
+
+        let cursor = await db.listings.find({});
+
+        if (filter && filter === ListingsFilter.PRICE_LOW_TO_HIGH) {
+          cursor = cursor.sort({ price: 1 });
+        }
+
+        if (filter && filter === ListingsFilter.PRICE_HIGH_TO_LOW) {
+          cursor = cursor.sort({ price: -1 });
+        }
+
+        cursor.skip(page > 0 ? (page - 1) * limit : 0);
+        cursor = cursor.limit(limit);
+
+        data.total = await cursor.count();
+        data.result = await cursor.toArray();
+        return data;
+      } catch (error) {
+        throw new Error(`Failed to query  listings: ${error}`);
       }
     },
   },
