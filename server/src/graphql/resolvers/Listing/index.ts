@@ -64,7 +64,6 @@ export const listingResolvers: IResolvers = {
 
           const cityText = city ? `${city}, ` : "";
           const adminText = admin ? `${admin}, ` : "";
-
           data.region = `${cityText}${adminText}${country}`;
         }
 
