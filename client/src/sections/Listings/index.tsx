@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { RouteComponentProps, Link } from "react-router-dom";
 import { useQuery } from "@apollo/react-hooks";
 import { Affix, Layout, List, Typography } from "antd";
@@ -26,11 +26,14 @@ const { Title, Paragraph, Text } = Typography;
 const PAGE_LIMIT = 8;
 
 export const Listings = ({ match }: RouteComponentProps<MatchParams>) => {
+  const locationRef = useRef(match.params.location);
   const [filter, setFilter] = useState(ListingsFilter.PRICE_LOW_TO_HIGH);
   const [page, setPage] = useState(1);
+
   const { data, error, loading } = useQuery<ListingsData, ListingsVariables>(
     LISTINGS,
     {
+      skip: locationRef.current !== match.params.location && page !== 1,
       variables: {
         location: match.params.location,
         filter,
@@ -39,6 +42,11 @@ export const Listings = ({ match }: RouteComponentProps<MatchParams>) => {
       },
     }
   );
+
+  useEffect(() => {
+    setPage(1);
+    locationRef.current = match.params.location;
+  }, [match.params.location]);
 
   if (loading) {
     return (
@@ -51,7 +59,7 @@ export const Listings = ({ match }: RouteComponentProps<MatchParams>) => {
   if (error) {
     return (
       <Content className="listings">
-        <ErrorBanner description="We either couldn't find anything matching your search or have encountered an error. If you're searching for a unique location, try searching again with more common key words"/>
+        <ErrorBanner description="We either couldn't find anything matching your search or have encountered an error. If you're searching for a unique location, try searching again with more common key words" />
         <ListingsSkeleton />
       </Content>
     );
