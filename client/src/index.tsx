@@ -8,6 +8,7 @@ import {
   Host,
   Listing,
   Listings,
+  Stripe,
   Login,
   NotFound,
   User,
@@ -98,6 +99,13 @@ const App = () => {
             exact
             path="/user/:id"
             render={(props) => <User {...props} viewer={viewer} />}
+          />
+          <Route
+            exact
+            path="/stripe"
+            render={(props) => (
+              <Stripe {...props} viewer={viewer} setViewer={setViewer} />
+            )}
           />
           <Route
             exact
