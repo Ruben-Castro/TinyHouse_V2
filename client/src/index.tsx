@@ -92,13 +92,19 @@ const App = () => {
         </Affix>
         <Switch>
           <Route exact path="/" component={Home} />
-          <Route exact path="/host" component={Host} />
+          <Route
+            exact
+            path="/host"
+            render={(props) => <Host {...props} viewer={viewer} />}
+          />
           <Route exact path="/listing/:id" component={Listing} />
           <Route exact path="/listings/:location?" component={Listings} />
           <Route
             exact
             path="/user/:id"
-            render={(props) => <User {...props} viewer={viewer} setViewer = {setViewer} />}
+            render={(props) => (
+              <User {...props} viewer={viewer} setViewer={setViewer} />
+            )}
           />
           <Route
             exact
