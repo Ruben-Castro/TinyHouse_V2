@@ -7,7 +7,9 @@ interface Props {
   title: string;
   listings: Listings["listings"]["result"];
 }
+
 const { Title } = Typography;
+
 export const HomeListings = ({ title, listings }: Props) => {
   return (
     <div className="home-listings">
@@ -15,14 +17,22 @@ export const HomeListings = ({ title, listings }: Props) => {
         {title}
       </Title>
       <List
-        grid={{ gutter: 8, xs: 1, sm: 2, lg: 4 }}
+        grid={{
+          gutter: 8,
+            xs: 1,
+            sm: 2,
+            md: 3,
+            lg: 3,
+            xl: 3,
+            xxl: 4,
+        }}
         dataSource={listings}
-        renderItem={(listing) => (
+        renderItem={listing => (
           <List.Item>
             <ListingCard listing={listing} />
           </List.Item>
         )}
-      ></List>
+      />
     </div>
   );
 };

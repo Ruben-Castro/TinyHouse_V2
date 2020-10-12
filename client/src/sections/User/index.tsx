@@ -1,47 +1,50 @@
 import React, { useState } from "react";
 import { RouteComponentProps } from "react-router-dom";
-import { useQuery } from "react-apollo";
+import { useQuery } from "@apollo/react-hooks";
+import { Col, Layout, Row } from "antd";
 import { USER } from "../../lib/graphql/queries";
 import {
   User as UserData,
-  UserVariables,
+  UserVariables
 } from "../../lib/graphql/queries/User/__generated__/User";
-import { Col, Layout, Row } from "antd";
-import { UserBookings, UserProfile, UserListings } from "./components";
+import { ErrorBanner, PageSkeleton } from "../../lib/components";
 import { Viewer } from "../../lib/types";
-import { PageSkeleton, ErrorBanner } from "../../lib/components";
+import { UserBookings, UserListings, UserProfile } from "./components";
+
+interface Props {
+  viewer: Viewer;
+  setViewer: (viewer: Viewer) => void;
+}
 
 interface MatchParams {
   id: string;
 }
 
-interface Props {
-  viewer: Viewer;
-}
-const PAGE_LIMIT = 4;
 const { Content } = Layout;
+const PAGE_LIMIT = 4;
+
 export const User = ({
   viewer,
-  match,
+  setViewer,
+  match
 }: Props & RouteComponentProps<MatchParams>) => {
-  console.log(`User viewer.token = ${viewer.token} `);
-  console.log(`User match = ${match.params.id} `);
   const [listingsPage, setListingsPage] = useState(1);
   const [bookingsPage, setBookingsPage] = useState(1);
 
-  const { data, loading, error } = useQuery<UserData, UserVariables>(USER, {
+  const { data, loading, error, refetch } = useQuery<UserData, UserVariables>(USER, {
     variables: {
       id: match.params.id,
       bookingsPage,
       listingsPage,
-      limit: PAGE_LIMIT,
-    },
+      limit: PAGE_LIMIT
+    }
   });
 
-  const stripeError = new URL(window.location.href).searchParams.get(
-    "stripe_error"
-  );
+  const handleUserRefetch = async () => {
+    await refetch();
+  };
 
+  const stripeError = new URL(window.location.href).searchParams.get("stripe_error");
   const stripeErrorBanner = stripeError ? (
     <ErrorBanner description="We had an issue connecting with Stripe. Please try again soon." />
   ) : null;
@@ -57,7 +60,7 @@ export const User = ({
   if (error) {
     return (
       <Content className="user">
-        <ErrorBanner description="This User may not exist or we've encountered and error. Please try again later" />
+        <ErrorBanner description="This user may not exist or we've encountered an error. Please try again soon." />
         <PageSkeleton />
       </Content>
     );
@@ -68,11 +71,15 @@ export const User = ({
 
   const userListings = user ? user.listings : null;
   const userBookings = user ? user.bookings : null;
-  console.log(`user listings ${userListings?.total}`);
-  console.log(`user bookings ${userBookings?.total}`);
 
   const userProfileElement = user ? (
-    <UserProfile user={user} viewerIsUser={viewerIsUser} />
+    <UserProfile
+      user={user}
+      viewer={viewer}
+      viewerIsUser={viewerIsUser}
+      setViewer={setViewer}
+      handleUserRefetch={handleUserRefetch}
+    />
   ) : null;
 
   const userListingsElement = userListings ? (
@@ -84,16 +91,15 @@ export const User = ({
     />
   ) : null;
 
-  const userBookingsElement = userBookings ? (
+  const userBookingsElement = userListings ? (
     <UserBookings
       userBookings={userBookings}
-      BookingsPage={bookingsPage}
+      bookingsPage={bookingsPage}
       limit={PAGE_LIMIT}
       setBookingsPage={setBookingsPage}
     />
   ) : null;
 
-  console.log(userBookingsElement);
   return (
     <Content className="user">
       {stripeErrorBanner}

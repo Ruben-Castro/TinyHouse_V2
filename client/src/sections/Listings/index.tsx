@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
-import { RouteComponentProps, Link } from "react-router-dom";
+import React, { useState, useRef, useEffect } from "react";
+import { Link, RouteComponentProps } from "react-router-dom";
 import { useQuery } from "@apollo/react-hooks";
 import { Affix, Layout, List, Typography } from "antd";
-import { ListingCard } from "../../lib/components";
+import { ErrorBanner, ListingCard } from "../../lib/components";
 import { LISTINGS } from "../../lib/graphql/queries";
 import {
   Listings as ListingsData,
@@ -14,14 +14,13 @@ import {
   ListingsPagination,
   ListingsSkeleton,
 } from "./components";
-import { ErrorBanner } from "../../lib/components";
 
 interface MatchParams {
   location: string;
 }
 
 const { Content } = Layout;
-const { Title, Paragraph, Text } = Typography;
+const { Paragraph, Text, Title } = Typography;
 
 const PAGE_LIMIT = 8;
 
@@ -30,7 +29,7 @@ export const Listings = ({ match }: RouteComponentProps<MatchParams>) => {
   const [filter, setFilter] = useState(ListingsFilter.PRICE_LOW_TO_HIGH);
   const [page, setPage] = useState(1);
 
-  const { data, error, loading } = useQuery<ListingsData, ListingsVariables>(
+  const { loading, data, error } = useQuery<ListingsData, ListingsVariables>(
     LISTINGS,
     {
       skip: locationRef.current !== match.params.location && page !== 1,
@@ -38,7 +37,7 @@ export const Listings = ({ match }: RouteComponentProps<MatchParams>) => {
         location: match.params.location,
         filter,
         limit: PAGE_LIMIT,
-        page: page,
+        page,
       },
     }
   );
@@ -59,7 +58,7 @@ export const Listings = ({ match }: RouteComponentProps<MatchParams>) => {
   if (error) {
     return (
       <Content className="listings">
-        <ErrorBanner description="We either couldn't find anything matching your search or have encountered an error. If you're searching for a unique location, try searching again with more common key words" />
+        <ErrorBanner description="We either couldn't find anything matching your search or have encountered an error. If you're searching for a unique location, try searching again with more common keywords." />
         <ListingsSkeleton />
       </Content>
     );
@@ -67,12 +66,6 @@ export const Listings = ({ match }: RouteComponentProps<MatchParams>) => {
 
   const listings = data ? data.listings : null;
   const listingsRegion = listings ? listings.region : null;
-
-  const listingsRegionElement = listingsRegion ? (
-    <Title className="listings__title" level={3}>
-      Results for the listing region {listingsRegion}
-    </Title>
-  ) : null;
 
   const listingsSectionElement =
     listings && listings.result.length ? (
@@ -91,7 +84,10 @@ export const Listings = ({ match }: RouteComponentProps<MatchParams>) => {
             gutter: 8,
             xs: 1,
             sm: 2,
+            md: 3,
             lg: 4,
+            xl: 4,
+            xxl: 4,
           }}
           dataSource={listings.result}
           renderItem={(listing) => (
@@ -104,15 +100,21 @@ export const Listings = ({ match }: RouteComponentProps<MatchParams>) => {
     ) : (
       <div>
         <Paragraph>
-          No listings have been created for{" "}
-          <Text mark> "{listingsRegion}"</Text>
+          It appears that no listings have yet been created for{" "}
+          <Text mark>"{listingsRegion}"</Text>
         </Paragraph>
         <Paragraph>
-          Be the first person to creat a{" "}
+          Be the first person to create a{" "}
           <Link to="/host">listing in this area</Link>!
         </Paragraph>
       </div>
     );
+
+  const listingsRegionElement = listingsRegion ? (
+    <Title level={3} className="listings__title">
+      Results for "{listingsRegion}"
+    </Title>
+  ) : null;
 
   return (
     <Content className="listings">

@@ -5,7 +5,7 @@ import { User } from "../../../../lib/graphql/queries/User/__generated__/User";
 
 interface Props {
   userBookings: User["user"]["bookings"];
-  BookingsPage: number;
+  bookingsPage: number;
   limit: number;
   setBookingsPage: (page: number) => void;
 }
@@ -14,33 +14,33 @@ const { Paragraph, Text, Title } = Typography;
 
 export const UserBookings = ({
   userBookings,
-  BookingsPage,
+  bookingsPage,
   limit,
-  setBookingsPage,
+  setBookingsPage
 }: Props) => {
   const total = userBookings ? userBookings.total : null;
   const result = userBookings ? userBookings.result : null;
-  console.log(`user bookings ${total}`);
+
   const userBookingsList = userBookings ? (
     <List
       grid={{
         gutter: 8,
         xs: 1,
         sm: 2,
-        lg: 4,
+        lg: 4
       }}
       dataSource={result ? result : undefined}
       locale={{ emptyText: "You haven't made any bookings!" }}
       pagination={{
         position: "top",
-        current: BookingsPage,
+        current: bookingsPage,
         total: total ? total : undefined,
         defaultPageSize: limit,
         hideOnSinglePage: true,
         showLessItems: true,
-        onChange: (page: number) => setBookingsPage(page),
+        onChange: (page: number) => setBookingsPage(page)
       }}
-      renderItem={(userBooking) => {
+      renderItem={userBooking => {
         const bookingHistory = (
           <div className="user-bookings__booking-history">
             <div>
@@ -68,8 +68,8 @@ export const UserBookings = ({
         Bookings
       </Title>
       <Paragraph className="user-bookings__description">
-        this section highlights the bookings you've made, and the
-        check-ini/checkout dates associated with said bookings
+        This section highlights the bookings you've made, and the
+        check-in/check-out dates associated with said bookings.
       </Paragraph>
       {userBookingsList}
     </div>

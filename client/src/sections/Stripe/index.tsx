@@ -7,7 +7,6 @@ import {
   ConnectStripe as ConnectStripeData,
   ConnectStripeVariables,
 } from "../../lib/graphql/mutations/ConnectStripe/__generated__/ConnectStripe";
-import { from } from "apollo-boost";
 import { Viewer } from "../../lib/types";
 import { displaySuccessNotification } from "../../lib/utils";
 

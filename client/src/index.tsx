@@ -98,7 +98,7 @@ const App = () => {
           <Route
             exact
             path="/user/:id"
-            render={(props) => <User {...props} viewer={viewer} />}
+            render={(props) => <User {...props} viewer={viewer} setViewer = {setViewer} />}
           />
           <Route
             exact

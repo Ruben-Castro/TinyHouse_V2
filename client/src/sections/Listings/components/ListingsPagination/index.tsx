@@ -7,6 +7,7 @@ interface Props {
   limit: number;
   setPage: (page: number) => void;
 }
+
 export const ListingsPagination = ({ total, page, limit, setPage }: Props) => {
   return (
     <Pagination
