@@ -12,20 +12,29 @@ import {
   ListingDetails,
   ListingBookings,
   ListingCreateBooking,
+  WrappedListingCreateBookingModal as ListingCreateBookingModal ,
 } from "./components";
 import { Moment } from "moment";
+import { Viewer } from "../../lib/types";
 interface MatchParams {
   id: string;
+}
+interface Props {
+  viewer: Viewer;
 }
 
 const PAGE_LIMIT = 3;
 
 const { Content } = Layout;
 
-export const Listing = ({ match }: RouteComponentProps<MatchParams>) => {
+export const Listing = ({
+  match,
+  viewer,
+}: Props & RouteComponentProps<MatchParams>) => {
   const [bookingsPage, setBookingsPage] = useState(1);
   const [checkInDate, setCheckInDate] = useState<Moment | null>(null);
   const [checkOutDate, setCheckOutDate] = useState<Moment | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const { loading, data, error } = useQuery<ListingData, ListingVariables>(
     LISTING,
@@ -72,13 +81,28 @@ export const Listing = ({ match }: RouteComponentProps<MatchParams>) => {
 
   const listingCreateBookingElement = listing ? (
     <ListingCreateBooking
+      host={listing.host}
+      bookingsIndex={listing.bookingsIndex}
+      viewer={viewer}
       price={listing.price}
       checkInDate={checkInDate}
       checkOutDate={checkOutDate}
       setCheckInDate={setCheckInDate}
       setCheckOutDate={setCheckOutDate}
+      setModalVisible={setModalVisible}
     />
   ) : null;
+
+  const listingCreateBookingModalElement =
+    listing && checkInDate && checkOutDate ? (
+      <ListingCreateBookingModal
+        price={listing.price}
+        checkInDate={checkInDate}
+        checkOutDate={checkOutDate}
+        modalVisible={modalVisible}
+        setModalVisible={setModalVisible}
+      />
+    ) : null;
 
   return (
     <Content className="listings">
@@ -91,6 +115,7 @@ export const Listing = ({ match }: RouteComponentProps<MatchParams>) => {
           {listingCreateBookingElement}
         </Col>
       </Row>
+      {listingCreateBookingModalElement}
     </Content>
   );
 };
