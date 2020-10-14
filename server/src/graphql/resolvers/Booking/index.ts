@@ -1,10 +1,10 @@
 import { IResolvers } from "apollo-server-express";
-import { Booking, Database, Listing, BookingsIndex } from "../../../lib/types";
-import { CreateBookingArgs } from "./types";
 import { Request } from "express";
-import { authorize } from "../../../lib/utils";
 import { ObjectId } from "mongodb";
 import { Stripe } from "../../../lib/api";
+import { Database, Listing, Booking, BookingsIndex } from "../../../lib/types";
+import { authorize } from "../../../lib/utils";
+import { CreateBookingArgs } from "./types";
 
 const resolveBookingsIndex = (
   bookingsIndex: BookingsIndex,
@@ -31,9 +31,7 @@ const resolveBookingsIndex = (
     if (!newBookingsIndex[y][m][d]) {
       newBookingsIndex[y][m][d] = true;
     } else {
-      throw new Error(
-        "selected dates can;t overlap dates that have already been booked"
-      );
+      throw new Error("selected dates can't overlap dates that have already been booked");
     }
 
     dateCursor = new Date(dateCursor.getTime() + 86400000);
@@ -52,26 +50,22 @@ export const bookingResolvers: IResolvers = {
       try {
         const { id, source, checkIn, checkOut } = input;
 
-        //verify a logged in user is making the request
-        const viewer = await authorize(db, req);
+        let viewer = await authorize(db, req);
         if (!viewer) {
-          throw new Error("viewer can't be found");
+          throw new Error("viewer cannot be found");
         }
 
-        //find lisitng document that is being booked
         const listing = await db.listings.findOne({
-          _id: new ObjectId(),
+          _id: new ObjectId(id)
         });
-
         if (!listing) {
-          throw new Error("Listing can't be found");
+          throw new Error("listing can't be found");
         }
-        //check that viewer is Not booking their own listing
+
         if (listing.host === viewer._id) {
           throw new Error("viewer can't book own listing");
         }
 
-        //check  that checkOut is not before checkIn
         const checkInDate = new Date(checkIn);
         const checkOutDate = new Date(checkOut);
 
@@ -79,21 +73,18 @@ export const bookingResolvers: IResolvers = {
           throw new Error("check out date can't be before check in date");
         }
 
-        //create a new bookingsIndex for listing being booked
-        const bookingIndex = resolveBookingsIndex(
+        const bookingsIndex = resolveBookingsIndex(
           listing.bookingsIndex,
           checkIn,
           checkOut
         );
 
-        //get total price to charge
         const totalPrice =
           listing.price *
           ((checkOutDate.getTime() - checkInDate.getTime()) / 86400000 + 1);
 
-        //get user document of host of listing
         const host = await db.users.findOne({
-          _id: listing.host,
+          _id: listing.host
         });
 
         if (!host || !host.walletId) {
@@ -102,56 +93,51 @@ export const bookingResolvers: IResolvers = {
           );
         }
 
-        //create Stripe charge on behalf of host
         await Stripe.charge(totalPrice, source, host.walletId);
 
-        //insert new booking document to bookings collection
         const insertRes = await db.bookings.insertOne({
           _id: new ObjectId(),
           listing: listing._id,
           tenant: viewer._id,
           checkIn,
-          checkOut,
+          checkOut
         });
 
-        //update user document of host to increment income
         const insertedBooking: Booking = insertRes.ops[0];
 
         await db.users.updateOne(
           {
-            _id: host._id,
+            _id: host._id
           },
           {
-            $inc: { income: totalPrice },
+            $inc: { income: totalPrice }
           }
         );
-        //updat bookings filed of tenant
+
         await db.users.updateOne(
           {
-            _id: viewer._id,
+            _id: viewer._id
           },
           {
-            $push: { bookings: insertedBooking._id },
+            $push: { bookings: insertedBooking._id }
           }
         );
 
-        //update bookings field of listing document
         await db.listings.updateOne(
           {
-            _id: listing._id,
+            _id: listing._id
           },
           {
-            $set: { bookingIndex },
-            $push: { bookings: insertedBooking._id },
+            $set: { bookingsIndex },
+            $push: { bookings: insertedBooking._id }
           }
         );
 
-        //return the newly inserted booking
         return insertedBooking;
       } catch (error) {
-        throw new Error(`Failed to create a booking ${error}`);
+        throw new Error(`Failed to create a booking: ${error}`);
       }
-    },
+    }
   },
   Booking: {
     id: (booking: Booking): string => {
@@ -164,10 +150,8 @@ export const bookingResolvers: IResolvers = {
     ): Promise<Listing | null> => {
       return db.listings.findOne({ _id: booking.listing });
     },
-    tenant: (booking: Booking, _args: {}, { db }: { db: Database })=> {
-      return db.users.findOne({
-        _id: booking.tenant,
-      });
-    },
-  },
+    tenant: (booking: Booking, _args: {}, { db }: { db: Database }) => {
+      return db.users.findOne({ _id: booking.tenant });
+    }
+  }
 };

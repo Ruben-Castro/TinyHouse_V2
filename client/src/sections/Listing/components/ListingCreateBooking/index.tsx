@@ -1,17 +1,18 @@
 import React from "react";
 import { Button, Card, DatePicker, Divider, Typography } from "antd";
-import { displayErrorMessage, formatListingPrice } from "../../../../lib/utils";
 import moment, { Moment } from "moment";
-import { Viewer } from "../../../../lib/types";
 import { Listing as ListingData } from "../../../../lib/graphql/queries/Listing/__generated__/Listing";
+import { displayErrorMessage, formatListingPrice } from "../../../../lib/utils";
+import { Viewer } from "../../../../lib/types";
 import { BookingsIndex } from "./types";
 
-const { Paragraph, Title, Text } = Typography;
+const { Paragraph, Text, Title } = Typography;
+
 interface Props {
-  host: ListingData["listing"]["host"];
-  bookingsIndex: ListingData["listing"]["bookingsIndex"];
   viewer: Viewer;
+  host: ListingData["listing"]["host"];
   price: number;
+  bookingsIndex: ListingData["listing"]["bookingsIndex"];
   checkInDate: Moment | null;
   checkOutDate: Moment | null;
   setCheckInDate: (checkInDate: Moment | null) => void;
@@ -20,15 +21,15 @@ interface Props {
 }
 
 export const ListingCreateBooking = ({
+  viewer,
+  host,
   price,
+  bookingsIndex,
   checkInDate,
   checkOutDate,
   setCheckInDate,
   setCheckOutDate,
-  setModalVisible,
-  viewer,
-  host,
-  bookingsIndex,
+  setModalVisible
 }: Props) => {
   const bookingsIndexJSON: BookingsIndex = JSON.parse(bookingsIndex);
 
@@ -43,6 +44,7 @@ export const ListingCreateBooking = ({
       return false;
     }
   };
+
   const disabledDate = (currentDate?: Moment) => {
     if (currentDate) {
       const dateIsBeforeEndOfDay = currentDate.isBefore(moment().endOf("day"));
@@ -57,7 +59,7 @@ export const ListingCreateBooking = ({
     if (checkInDate && selectedCheckOutDate) {
       if (moment(selectedCheckOutDate).isBefore(checkInDate, "days")) {
         return displayErrorMessage(
-          `You can't book date of check out to be prior to check in `
+          `You can't book date of check out to be prior to check in!`
         );
       }
 
@@ -87,18 +89,17 @@ export const ListingCreateBooking = ({
 
   const viewerIsHost = viewer.id === host.id;
   const checkInInputDisabled = !viewer.id || viewerIsHost || !host.hasWallet;
-  const checkOutInputDisabled = !checkInDate;
-  const buttonDisabled = !checkInDate || !checkOutDate;
+  const checkOutInputDisabled = checkInInputDisabled || !checkInDate;
+  const buttonDisabled = checkOutInputDisabled || !checkInDate || !checkOutDate;
 
-  let buttonMessage = "You Won't be charged yet";
-
+  let buttonMessage = "You won't be charged yet";
   if (!viewer.id) {
     buttonMessage = "You have to be signed in to book a listing!";
   } else if (viewerIsHost) {
     buttonMessage = "You can't book your own listing!";
   } else if (!host.hasWallet) {
     buttonMessage =
-      "The Host has disconnected from Stripe and thus can't recieve payments.";
+      "The host has disconnected from Stripe and thus won't be able to receive payments!";
   }
 
   return (
@@ -116,11 +117,11 @@ export const ListingCreateBooking = ({
             <Paragraph strong>Check In</Paragraph>
             <DatePicker
               value={checkInDate ? checkInDate : undefined}
-              format={"MM/DD/YYYY"}
+              format={"YYYY/MM/DD"}
               showToday={false}
               disabled={checkInInputDisabled}
               disabledDate={disabledDate}
-              onChange={(dateValue) => setCheckInDate(dateValue)}
+              onChange={dateValue => setCheckInDate(dateValue)}
               onOpenChange={() => setCheckOutDate(null)}
             />
           </div>
@@ -128,23 +129,23 @@ export const ListingCreateBooking = ({
             <Paragraph strong>Check Out</Paragraph>
             <DatePicker
               value={checkOutDate ? checkOutDate : undefined}
-              format={"MM/DD/YYYY"}
+              format={"YYYY/MM/DD"}
               showToday={false}
               disabled={checkOutInputDisabled}
               disabledDate={disabledDate}
-              onChange={(dateValue) => verifyAndSetCheckOutDate(dateValue)}
+              onChange={dateValue => verifyAndSetCheckOutDate(dateValue)}
             />
           </div>
         </div>
         <Divider />
         <Button
+          disabled={buttonDisabled}
           size="large"
           type="primary"
           className="listing-booking__card-cta"
-          disabled={buttonDisabled}
-          onClick={() =>setModalVisible(true)}
+          onClick={() => setModalVisible(true)}
         >
-          Request to Book!
+          Request to book!
         </Button>
         <Text type="secondary" mark>
           {buttonMessage}
